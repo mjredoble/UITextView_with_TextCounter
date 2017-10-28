@@ -23,7 +23,7 @@ textView.textAlignment = .left
 textView.attributedText = fullText
 containerView.addSubview(textView)
 
-class TextCounterTextView: UITextView, UITextViewDelegate {
+class TextCounterTextView: UITextView {
     var maximumNumberOfText: Int = 0 {
         didSet {
             self.textContainerInset = UIEdgeInsets(top: 15, left: 0, bottom: 0, right: 0)
@@ -33,6 +33,7 @@ class TextCounterTextView: UITextView, UITextViewDelegate {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        delegate = self
     }
     
     override func setNeedsLayout() {
@@ -40,17 +41,21 @@ class TextCounterTextView: UITextView, UITextViewDelegate {
     }
 
     override func draw(_ rect: CGRect) {
+        showTextCounter(rect: rect)
+    }
+    
+    func showTextCounter(rect: CGRect) {
         if maximumNumberOfText != 0 {
             let textCount = getTextCount()
             let textLimit = maximumNumberOfText
             
             let newX = rect.width - (getTextCounterRect().width + 10)
             let textRect = CGRect(x: newX, y: rect.minY, width: rect.width, height: rect.height)
-            drawMyText(myText: "\(textCount)/\(textLimit)", textColor: UIColor.white, inRect: textRect)
+            drawText(myText: "\(textCount)/\(textLimit)", textColor: UIColor.white, inRect: textRect)
         }
     }
     
-    func drawMyText(myText:String,textColor:UIColor, inRect:CGRect){
+    func drawText(myText:String,textColor:UIColor, inRect:CGRect){
         let attributes = [NSAttributedStringKey.foregroundColor: textColor, NSAttributedStringKey.font:UIFont.systemFont(ofSize: 13.0)]
         
         myText.draw(in: inRect, withAttributes: attributes)
@@ -65,5 +70,14 @@ class TextCounterTextView: UITextView, UITextViewDelegate {
         let attributes = [NSAttributedStringKey.font:UIFont.systemFont(ofSize: 13.0)]
         return string.size(withAttributes: attributes)
     }
+}
+
+extension TextCounterTextView: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        setNeedsDisplay()
+    }
     
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        return getTextCount() < maximumNumberOfText
+    }
 }
